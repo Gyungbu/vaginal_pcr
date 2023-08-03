@@ -10,7 +10,7 @@ from scipy.stats import percentileofscore, pearsonr
 # Check if the script is being called with the correct arguments
 if len(sys.argv) < 2:
     print("Usage: python Script.py <path_exp>")
-    print("Example: python vaginal_pcr_analysis.py \"/home/kbkim/vaginal_pcr/input/experiment_result.xls\"")
+    print("Example: python vaginal_pcr_analysis.py \"/home/kbkim/vaginal_pcr/input/experiment_result.xlsx\"")
     sys.exit(1)
     
 # path_exp : Path of Merged Proportion file to analyze
@@ -66,12 +66,12 @@ class VaginalPCRAnalysis:
         
         ## Dataframe of Reference files
         self.df_exp = None
-        self.df_abundance = None
         self.df_db = None
         
         ## Dataframe of output files to calculate
-        self.df_harmful = None
-        self.df_beneficial = None        
+        self.df_abundance = None
+        self.df_percentile_rank = None 
+        self.df_eval = None
         
         ## Lists used for calculation
         self.li_new_sample_name = None
@@ -255,6 +255,7 @@ class VaginalPCRAnalysis:
             sys.exit()
     
         return rv, rvmsg         
+    
 ####################################
 # main
 ####################################
