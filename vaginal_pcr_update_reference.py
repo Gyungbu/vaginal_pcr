@@ -199,10 +199,10 @@ class VaginalPCRUpdateRef:
 ####################################
 if __name__ == '__main__':
     
-    eggutpro = VaginalPCRUpdateRef(path_exp)
-    eggutpro.ReadDB()
-    eggutpro.CalculateProportion()
-    eggutpro.InsertDataDB()    
+    vaginalupdate = VaginalPCRUpdateRef(path_exp)
+    vaginalupdate.ReadDB()
+    vaginalupdate.CalculateProportion()
+    vaginalupdate.InsertDataDB()    
     
     print('Update Complete')     
             
