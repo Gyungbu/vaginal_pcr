@@ -1,5 +1,5 @@
 ##<Usage: python Script.py {path_exp}>
-### ex) python vaginal_pcr_analysis.py "/home/kbkim/vaginal_pcr/input/experiment_result.xlsx"
+### ex) python vaginal_pcr_update_reference.py "/home/kbkim/vaginal_pcr/input/experiment_result2.xlsx"
 
 import os, datetime
 import pandas as pd
@@ -10,7 +10,7 @@ from scipy.stats import percentileofscore, pearsonr
 # Check if the script is being called with the correct arguments
 if len(sys.argv) < 2:
     print("Usage: python Script.py <path_exp>")
-    print("Example: python vaginal_pcr_analysis.py \"/home/kbkim/vaginal_pcr/input/experiment_result.xlsx\"")
+    print("Example: python vaginal_pcr_update_reference.py \"/home/kbkim/vaginal_pcr/input/experiment_result2.xlsx\"")
     sys.exit(1)
     
 # path_exp : Path of Merged Proportion file to analyze
@@ -43,10 +43,10 @@ def WriteLog(functionname, msg, type='INFO', fplog=None):
 ###################################
 # MainClass
 ###################################
-class VaginalPCRAnalysis:
+class VaginalPCRUpdateRef:
     def __init__(self, path_exp, fplog=None):
         """
-        Initializes a VaginalPCRAnalysis object.
+        Initializes a VaginalPCRUpdateRef object.
 
         Parameters:
         path_exp (str): Path of PCR experiment result file to analyze.
@@ -59,8 +59,7 @@ class VaginalPCRAnalysis:
         self.path_db = f"{curdir}/input/db_abundance.csv"
         
         ## Path of output files     
-        self.path_percentile_rank_output = f"{curdir}/output/percentile_rank.csv"
-        self.path_eval_output = f"{curdir}/output/eval.csv"
+
         
         ## Dataframe of Reference files
         self.df_exp = None
@@ -68,8 +67,6 @@ class VaginalPCRAnalysis:
         
         ## Dataframe of output files to calculate
         self.df_abundance = None
-        self.df_percentile_rank = None 
-        self.df_eval = None
         
         ## Lists used for calculation
         self.li_new_sample_name = None
@@ -84,7 +81,7 @@ class VaginalPCRAnalysis:
         rvmsg = "Success"
         
         try:           
-            self.df_db = pd.read_csv(self.path_db, index_col=0)
+            self.df_db = pd.read_csv(self.path_db)
             
             self.df_exp = pd.read_excel(self.path_exp)
             idx_well_id = list(self.df_exp[self.df_exp.columns[0]]).index('Well')
@@ -158,43 +155,35 @@ class VaginalPCRAnalysis:
             rv = False
             rvmsg = str(e)
             print(f"Error has occurred in the {myNAME} process") 
-
-    def CalculatePercentileRank(self):
+            
+    # Insert data into DB - Merge the data frame df_db & df_exp
+    def InsertDataDB(self): 
         """
-        Calculate the Percentile Rank and Save the Percentile Rank data as an Csv file.
+        Inserts data into the database by merging the data frames df_db and df_abundance.
 
         Returns:
         A tuple (success, message), where success is a boolean indicating whether the operation was successful,
         and message is a string containing a success or error message.
-        """          
+        """   
         myNAME = self.__class__.__name__+"::"+sys._getframe().f_code.co_name
         WriteLog(myNAME, "In", type='INFO', fplog=self.__fplog)
-         
         rv = True
         rvmsg = "Success"
         
-        try:      
+        try: 
+            print(self.df_db.columns)
+            print(self.df_abundance.columns)
+            self.df_db = pd.merge(self.df_db, self.df_abundance, how='outer',left_on='taxa', right_index=True, suffixes=['', '_right']) 
+            self.df_db = self.df_db.fillna(0)
+            self.df_db = self.df_db.filter(regex='^(?!.*_right).*') # Eliminate duplicate columns
 
-            # Create an empty data frame 
-            self.df_percentile_rank = pd.DataFrame(index = self.li_new_sample_name, columns = self.li_microbiome)
-                              
-            # Loop through all samples and phenotypes and calculate the percentile rank
-            for i in range(len(self.li_new_sample_name)):
-                for j in range(len(self.li_microbiome)):
-                    self.df_percentile_rank.loc[self.li_new_sample_name[i], self.li_microbiome[j]] = (percentileofscore(list(self.df_db.loc[self.li_microbiome[j]]), self.df_abundance.loc[self.li_microbiome[j], self.li_new_sample_name[i]], kind='mean')).round(1)
-            
+            # Update the data - Convert df_exp to df_db
+            self.df_abundance = self.df_db       
+                      
+            self.df_db_rev = self.df_db.set_index(keys=['taxa'], inplace=False, drop=True)    
+            self.df_db_rev.to_csv(self.path_db, index_label='taxa')
 
-            # Outliers
-            # Replace percentile ranks that are less than or equal to 5 with 5, and those that are greater than or equal to 95 with 95
-            for i in range(len(self.li_microbiome)):
-                self.df_percentile_rank.loc[self.df_percentile_rank[self.li_microbiome[i]]<=5, self.li_microbiome[i]] = 5.0
-                self.df_percentile_rank.loc[self.df_percentile_rank[self.li_microbiome[i]]>=95, self.li_microbiome[i]] = 95.0      
-                     
-            # Replace missing values with the string 'None'    
-            self.df_percentile_rank = self.df_percentile_rank.fillna('None')
 
-            # Save the output file - Percentile Rank of the samples
-            self.df_percentile_rank.to_csv(self.path_percentile_rank_output, encoding="utf-8-sig", index_label='serial_number')
             
         except Exception as e:
             print(str(e))
@@ -202,74 +191,18 @@ class VaginalPCRAnalysis:
             rvmsg = str(e)
             print(f"Error has occurred in the {myNAME} process")    
             sys.exit()
-    
-        return rv, rvmsg    
-    
-    def EvaluatePercentileRank(self):
-        """
-        Evaluate based on percentile rank value and Save the Evaluation data as an Csv file
-
-        Returns:
-        A tuple (success, message), where success is a boolean indicating whether the operation was successful,
-        and message is a string containing a success or error message.
-        """          
-        myNAME = self.__class__.__name__+"::"+sys._getframe().f_code.co_name
-        WriteLog(myNAME, "In", type='INFO', fplog=self.__fplog)
-         
-        rv = True
-        rvmsg = "Success"
-        
-        try:                 
-            self.df_eval = pd.DataFrame(index=self.df_percentile_rank.index)
             
-            li_positive_var = ['L_crispatus', 'L_gasseri', 'L_iners', 'L_jensenii']
-            
-            for col in self.df_percentile_rank:
-                if col in li_positive_var:
-                    # Define the conditions and corresponding values
-                    conditions = [
-                        self.df_percentile_rank[col] >= 70,
-                        (self.df_percentile_rank[col] >= 30) & (self.df_percentile_rank[col] < 70),
-                        self.df_percentile_rank[col] <= 30
-                    ]
-                    
-                    values = ['좋음', '보통', '나쁨']     
-                    
-                    self.df_eval[col] = np.select(conditions, values)  
-                                 
-                else: 
-                    # Define the conditions and corresponding values
-                    conditions = [
-                        self.df_percentile_rank[col] >= 70,
-                        (self.df_percentile_rank[col] >= 30) & (self.df_percentile_rank[col] < 70),
-                        self.df_percentile_rank[col] <= 30
-                    ]
-                    
-                    values = ['나쁨', '보통', '좋음']     
-                    
-                    self.df_eval[col] = np.select(conditions, values)       
-                    
-            # Save the output file - df_eval
-            self.df_eval.to_csv(self.path_eval_output, encoding="utf-8-sig", index_label='serial_number') 
-
-        except Exception as e:
-            print(str(e))
-            rv = False
-            rvmsg = str(e)
-            print(f"Error has occurred in the {myNAME} process")    
-            sys.exit()
-    
-        return rv, rvmsg         
+        return rv, rvmsg      
     
 ####################################
 # main
 ####################################
 if __name__ == '__main__':
     
-    vaginalpcranalysis = VaginalPCRAnalysis(path_exp)
-    vaginalpcranalysis.ReadDB()      
-    vaginalpcranalysis.CalculateProportion()  
-    vaginalpcranalysis.CalculatePercentileRank()   
-    vaginalpcranalysis.EvaluatePercentileRank()     
+    eggutpro = VaginalPCRUpdateRef(path_exp)
+    eggutpro.ReadDB()
+    eggutpro.CalculateProportion()
+    eggutpro.InsertDataDB()    
     
-    print('Analysis Complete')
+    print('Update Complete')     
+            
