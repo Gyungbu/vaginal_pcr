@@ -256,9 +256,9 @@ class VaginalPCRAnalysis:
     
         return rv, rvmsg         
 
-    def ClassificateType(self):
+    def ClassifyType(self):
         """
-        Classificate a Type based on percentile rank value and Save the Evaluation data as an Csv file
+        Classify a Type based on percentile rank value and Save the Evaluation data as an Csv file
 
         Returns:
         A tuple (success, message), where success is a boolean indicating whether the operation was successful,
@@ -271,15 +271,23 @@ class VaginalPCRAnalysis:
         rvmsg = "Success"
         
         try:  
-            dict_score = self.df_percentile_rank.to_dict('records')
-            
+            dict_score = self.df_abundance.transpose().to_dict('records')
+            print(self.df_abundance.transpose())
             dict_type = {'L_crispatus': 'CST I', 'L_gasseri': 'CST II', 'L_iners': 'CST III',  
                          'G_vaginalis': 'CST IV-A', 'F_vaginae': 'CST IV-B', 'BVAB-1': 'CST IV-C', 'L_jensenii': 'CST V'}
 
-            for i in range(len(self.li_new_sample_name)):     
-                max_taxa = max(dict_score[i],key=dict_score[i].get)
+            for idx in range(len(self.li_new_sample_name)):     
                 
-                self.df_eval.loc[self.li_new_sample_name[i], 'Type'] = dict_type[max_taxa]
+                total = sum(dict_score[idx].values())
+                
+                if total < 0.05:
+                    self.df_eval.loc[self.li_new_sample_name[idx], 'Type'] = 'others'
+                    
+                else:
+               
+                    max_taxa = max(dict_score[idx],key=dict_score[idx].get)
+
+                    self.df_eval.loc[self.li_new_sample_name[idx], 'Type'] = dict_type[max_taxa]
                     
             # Save the output file - df_eval
             self.df_eval.to_csv(self.path_eval_output, encoding="utf-8-sig", index_label='serial_number') 
@@ -303,6 +311,6 @@ if __name__ == '__main__':
     vaginalpcranalysis.CalculateProportion()  
     vaginalpcranalysis.CalculatePercentileRank()   
     vaginalpcranalysis.EvaluatePercentileRank()     
-    vaginalpcranalysis.ClassificateType()    
+    vaginalpcranalysis.ClassifyType()    
     
     print('Analysis Complete')
