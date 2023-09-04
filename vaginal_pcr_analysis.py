@@ -149,9 +149,7 @@ class VaginalPCRAnalysis:
                     ct_universal = self.df_exp[condition_universal]['Ct'].values[0]   
                     
                     self.df_abundance.loc[self.li_microbiome[j], self.li_new_sample_name[i]] = 2**(-(ct- ct_universal))
-            self.df_abundance = self.df_abundance.rename_axis('taxa', axis=1)
-            print(self.df_abundance)
-                        
+            #self.df_abundance = self.df_abundance.rename_axis('taxa', axis=1)                        
             
         except Exception as e:
             print(str(e))
@@ -207,7 +205,7 @@ class VaginalPCRAnalysis:
     
     def EvaluatePercentileRank(self):
         """
-        Evaluate based on percentile rank value and Save the Evaluation data as an Csv file
+        Evaluate based on percentile rank value
 
         Returns:
         A tuple (success, message), where success is a boolean indicating whether the operation was successful,
@@ -248,6 +246,40 @@ class VaginalPCRAnalysis:
                     values = ['나쁨', '보통', '좋음']     
                     
                     self.df_eval[col] = np.select(conditions, values)       
+
+        except Exception as e:
+            print(str(e))
+            rv = False
+            rvmsg = str(e)
+            print(f"Error has occurred in the {myNAME} process")    
+            sys.exit()
+    
+        return rv, rvmsg         
+
+    def ClassificateType(self):
+        """
+        Classificate a Type based on percentile rank value and Save the Evaluation data as an Csv file
+
+        Returns:
+        A tuple (success, message), where success is a boolean indicating whether the operation was successful,
+        and message is a string containing a success or error message.
+        """          
+        myNAME = self.__class__.__name__+"::"+sys._getframe().f_code.co_name
+        WriteLog(myNAME, "In", type='INFO', fplog=self.__fplog)
+         
+        rv = True
+        rvmsg = "Success"
+        
+        try:  
+            dict_score = self.df_percentile_rank.to_dict('records')
+            
+            dict_type = {'L_crispatus': 'CST I', 'L_gasseri': 'CST II', 'L_iners': 'CST III',  
+                         'G_vaginalis': 'CST IV-A', 'F_vaginae': 'CST IV-B', 'BVAB-1': 'CST IV-C', 'L_jensenii': 'CST V'}
+
+            for i in range(len(self.li_new_sample_name)):     
+                max_taxa = max(dict_score[i],key=dict_score[i].get)
+                
+                self.df_eval.loc[self.li_new_sample_name[i], 'Type'] = dict_type[max_taxa]
                     
             # Save the output file - df_eval
             self.df_eval.to_csv(self.path_eval_output, encoding="utf-8-sig", index_label='serial_number') 
@@ -271,5 +303,6 @@ if __name__ == '__main__':
     vaginalpcranalysis.CalculateProportion()  
     vaginalpcranalysis.CalculatePercentileRank()   
     vaginalpcranalysis.EvaluatePercentileRank()     
+    vaginalpcranalysis.ClassificateType()    
     
     print('Analysis Complete')

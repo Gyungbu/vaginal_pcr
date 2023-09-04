@@ -146,9 +146,7 @@ class VaginalPCRUpdateRef:
                     ct_universal = self.df_exp[condition_universal]['Ct'].values[0]   
                     
                     self.df_abundance.loc[self.li_microbiome[j], self.li_new_sample_name[i]] = 2**(-(ct- ct_universal))
-            self.df_abundance = self.df_abundance.rename_axis('taxa', axis=1)
-            print(self.df_abundance)
-                        
+            #self.df_abundance = self.df_abundance.rename_axis('taxa', axis=1)                        
             
         except Exception as e:
             print(str(e))
@@ -171,8 +169,6 @@ class VaginalPCRUpdateRef:
         rvmsg = "Success"
         
         try: 
-            print(self.df_db.columns)
-            print(self.df_abundance.columns)
             self.df_db = pd.merge(self.df_db, self.df_abundance, how='outer',left_on='taxa', right_index=True, suffixes=['', '_right']) 
             self.df_db = self.df_db.fillna(0)
             self.df_db = self.df_db.filter(regex='^(?!.*_right).*') # Eliminate duplicate columns
