@@ -271,22 +271,18 @@ class VaginalPCRAnalysis:
         rvmsg = "Success"
         
         try:  
-            dict_score = self.df_abundance.transpose().to_dict('records')
-            print(self.df_abundance.transpose())
+            dict_abundance = self.df_abundance.transpose().to_dict('records')
             dict_type = {'L_crispatus': 'CST I', 'L_gasseri': 'CST II', 'L_iners': 'CST III',  
-                         'G_vaginalis': 'CST IV-A', 'F_vaginae': 'CST IV-B', 'BVAB-1': 'CST IV-C', 'L_jensenii': 'CST V'}
+                         'G_vaginalis': 'CST IV', 'F_vaginae': 'CST IV', 'BVAB-1': 'CST IV', 'L_jensenii': 'CST V'}
 
-            for idx in range(len(self.li_new_sample_name)):     
+            for idx in range(len(self.li_new_sample_name)):                  
+                total_abundance = sum(dict_abundance[idx].values())
                 
-                total = sum(dict_score[idx].values())
-                
-                if total < 0.05:
+                if total_abundance < 0.05:
                     self.df_eval.loc[self.li_new_sample_name[idx], 'Type'] = 'others'
                     
-                else:
-               
-                    max_taxa = max(dict_score[idx],key=dict_score[idx].get)
-
+                else:   
+                    max_taxa = max(dict_abundance[idx],key=dict_abundance[idx].get)
                     self.df_eval.loc[self.li_new_sample_name[idx], 'Type'] = dict_type[max_taxa]
                     
             # Save the output file - df_eval

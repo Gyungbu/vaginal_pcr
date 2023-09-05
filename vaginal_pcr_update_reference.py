@@ -1,5 +1,5 @@
 ##<Usage: python Script.py {path_exp}>
-### ex) python vaginal_pcr_update_reference.py "/home/kbkim/vaginal_pcr/input/experiment_result2.xlsx"
+### ex) python vaginal_pcr_update_reference.py "/home/kbkim/vaginal_pcr/input/experiment_result.xlsx"
 
 import os, datetime
 import pandas as pd
