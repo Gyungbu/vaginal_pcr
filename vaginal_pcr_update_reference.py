@@ -8,7 +8,6 @@ import numpy as np
 from scipy.stats import percentileofscore, pearsonr
 import matplotlib.pyplot as plt
 
-
 # Check if the script is being called with the correct arguments
 if len(sys.argv) < 2:
     print("Usage: python Script.py <path_exp>")
@@ -47,9 +46,10 @@ def save_histograms_to_file(df, filename):
     num_rows = df.shape[1]
     fig, axs = plt.subplots(num_rows, 1, figsize=(8, 6*num_rows))
     
-    for i in range(num_rows):
-        axs[i].hist(df.iloc[:,i], bins=5)
-        axs[i].set_title(df.columns.to_list()[i])
+    for i in range(num_rows):           
+        data = df.iloc[:,i]
+        axs[i].hist(data, weights=np.ones(len(data)) / len(data)*100, bins=5)
+        axs[i].set_title(df.columns.to_list()[i][:-8])
         axs[i].set_xlim([0, 100])
         
     plt.tight_layout()
@@ -222,6 +222,19 @@ class VaginalPCRUpdateRef:
               
             self.df_db_rev['harmfulTotal[%]'] = (self.df_db_rev['G_vaginalis'] + self.df_db_rev['F_vaginae'] + self.df_db_rev['BVAB-1'])*100             
 
+            for col in ['beneficialTotal[%]', 'harmfulTotal[%]']:
+                
+                conditions = [
+                    self.df_db_rev[col] >= 80,
+                    (self.df_db_rev[col] > 60) & (self.df_db_rev[col] < 80),
+                    (self.df_db_rev[col] > 40) & (self.df_db_rev[col] <= 60),
+                    (self.df_db_rev[col] > 20) & (self.df_db_rev[col] <= 40),
+                    self.df_db_rev[col] <= 20
+                ]
+
+                values = [80, 60, 40, 20, 0]     
+
+                self.df_db_rev[col] = np.select(conditions, values)  
             # Histogram Plot - mrs 
             save_histograms_to_file(self.df_db_rev[['beneficialTotal[%]', 'harmfulTotal[%]']], self.path_hist)
                         
