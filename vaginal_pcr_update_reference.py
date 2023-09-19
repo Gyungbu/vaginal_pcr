@@ -6,6 +6,8 @@ import pandas as pd
 import sys
 import numpy as np
 from scipy.stats import percentileofscore, pearsonr
+import matplotlib.pyplot as plt
+
 
 # Check if the script is being called with the correct arguments
 if len(sys.argv) < 2:
@@ -40,6 +42,18 @@ def WriteLog(functionname, msg, type='INFO', fplog=None):
         fplog.write(writestr)
         fplog.flush()
         
+# Histogram Plot - mrs 
+def save_histograms_to_file(df, filename):
+    num_rows = df.shape[1]
+    fig, axs = plt.subplots(num_rows, 1, figsize=(8, 6*num_rows))
+    
+    for i in range(num_rows):
+        axs[i].hist(df.iloc[:,i], bins=5)
+        axs[i].set_title(df.columns.to_list()[i])
+    
+    plt.tight_layout()
+    plt.savefig(filename)        
+    
 ###################################
 # MainClass
 ###################################
@@ -59,6 +73,7 @@ class VaginalPCRUpdateRef:
         self.path_db = f"{curdir}/input/db_abundance.csv"
         
         ## Path of output files     
+        self.path_hist = f"{curdir}/output/abundance_hist.png"
 
         
         ## Dataframe of Reference files
@@ -186,7 +201,37 @@ class VaginalPCRUpdateRef:
             sys.exit()
             
         return rv, rvmsg      
-    
+
+    def PlotDistribution(self): 
+        """
+        Plot the Distribution - Relative Abundance of Harmful & Beneficial microbiome  
+
+        Returns:
+        A tuple (success, message), where success is a boolean indicating whether the operation was successful,
+        and message is a string containing a success or error message.
+        """   
+        myNAME = self.__class__.__name__+"::"+sys._getframe().f_code.co_name
+        WriteLog(myNAME, "In", type='INFO', fplog=self.__fplog)
+        rv = True
+        rvmsg = "Success"
+        
+        try: 
+            self.df_db_rev = self.df_db_rev.transpose() 
+            self.df_db_rev['beneficialTotal[%]'] = (self.df_db_rev['L_crispatus'] + self.df_db_rev['L_gasseri'] + self.df_db_rev['L_iners'] + self.df_db_rev['L_jensenii'])*100
+              
+            self.df_db_rev['harmfulTotal[%]'] = (self.df_db_rev['G_vaginalis'] + self.df_db_rev['F_vaginae'] + self.df_db_rev['BVAB-1'])*100             
+
+            # Histogram Plot - mrs 
+            save_histograms_to_file(self.df_db_rev[['beneficialTotal[%]', 'harmfulTotal[%]']], self.path_hist)
+                        
+        except Exception as e:
+            print(str(e))
+            rv = False
+            rvmsg = str(e)
+            print(f"Error has occurred in the {myNAME} process")    
+            sys.exit()
+            
+        return rv, rvmsg        
 ####################################
 # main
 ####################################
@@ -196,6 +241,7 @@ if __name__ == '__main__':
     vaginalupdate.ReadDB()
     vaginalupdate.CalculateProportion()
     vaginalupdate.InsertDataDB()    
+    vaginalupdate.PlotDistribution()    
     
     print('Update Complete')     
             
