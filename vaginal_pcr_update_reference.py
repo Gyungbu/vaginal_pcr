@@ -146,7 +146,6 @@ class VaginalPCRUpdateRef:
                     ct_universal = self.df_exp[condition_universal]['Ct'].values[0]   
                     
                     self.df_abundance.loc[self.li_microbiome[j], self.li_new_sample_name[i]] = 2**(-(ct- ct_universal))
-            #self.df_abundance = self.df_abundance.rename_axis('taxa', axis=1)                        
             
         except Exception as e:
             print(str(e))
@@ -178,8 +177,6 @@ class VaginalPCRUpdateRef:
                       
             self.df_db_rev = self.df_db.set_index(keys=['taxa'], inplace=False, drop=True)    
             self.df_db_rev.to_csv(self.path_db, index_label='taxa')
-
-
             
         except Exception as e:
             print(str(e))
