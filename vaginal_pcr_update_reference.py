@@ -50,7 +50,8 @@ def save_histograms_to_file(df, filename):
     for i in range(num_rows):
         axs[i].hist(df.iloc[:,i], bins=5)
         axs[i].set_title(df.columns.to_list()[i])
-    
+        axs[i].set_xlim([0, 100])
+        
     plt.tight_layout()
     plt.savefig(filename)        
     
