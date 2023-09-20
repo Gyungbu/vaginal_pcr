@@ -3,7 +3,7 @@ import pandas as pd
 import sys
 import numpy as np
 from scipy.stats import percentileofscore, pearsonr
-
+import matplotlib.pyplot as plt
 
 #-------------------------------------------------------
 # Common Function
@@ -28,6 +28,21 @@ def WriteLog(functionname, msg, type='INFO', fplog=None):
         fplog.write(writestr)
         fplog.flush()
         
+# Histogram Plot 
+def save_histograms_to_file(df, filename):
+    num_rows = df.shape[1]
+    fig, axs = plt.subplots(num_rows, 1, figsize=(8, 6*num_rows))
+    
+    for i in range(num_rows):           
+        data = df.iloc[:,i]
+        axs[i].hist(data, weights=np.ones(len(data)) / len(data)*100, bins=5)
+        axs[i].set_title(df.columns.to_list()[i][:-8])
+        axs[i].set_xlabel('Sum of Relative Abundance[%]')
+        axs[i].set_ylabel('Percentage of samples[%]')        
+        axs[i].set_xlim([0, 100])
+        
+    plt.tight_layout()
+    plt.savefig(filename)            
 ###################################
 # MainClass
 ###################################
@@ -57,6 +72,7 @@ class VaginalPCRAnalysis:
         self.path_abundance_output = f"{self.outdir}/abundance.csv"
         self.path_eval_output = f"{self.outdir}/eval.csv"
         self.path_mean_abundance = f"{self.outdir}/mean_abundance.csv"
+        self.path_hist = f"{self.outdir}/abundance_hist.png"
         
         ## Dataframe of Reference files
         self.df_exp = None
@@ -274,7 +290,50 @@ class VaginalPCRAnalysis:
             sys.exit()
     
         return rv, rvmsg     
-    
+
+    def PlotDistribution(self): 
+        """
+        Plot the Distribution - Relative Abundance of Harmful & Beneficial microbiome  
+
+        Returns:
+        A tuple (success, message), where success is a boolean indicating whether the operation was successful,
+        and message is a string containing a success or error message.
+        """   
+        myNAME = self.__class__.__name__+"::"+sys._getframe().f_code.co_name
+        WriteLog(myNAME, "In", type='INFO', fplog=self.__fplog)
+        rv = True
+        rvmsg = "Success"
+        
+        try: 
+            self.df_db = self.df_db.transpose() 
+            self.df_db['beneficialTotal[%]'] = (self.df_db['L_crispatus'] + self.df_db['L_gasseri'] + self.df_db['L_iners'] + self.df_db['L_jensenii'])*100
+              
+            self.df_db['harmfulTotal[%]'] = (self.df_db['G_vaginalis'] + self.df_db['F_vaginae'] + self.df_db['BVAB-1'])*100             
+
+            for col in ['beneficialTotal[%]', 'harmfulTotal[%]']:
+                
+                conditions = [
+                    self.df_db[col] >= 80,
+                    (self.df_db[col] > 60) & (self.df_db[col] < 80),
+                    (self.df_db[col] > 40) & (self.df_db[col] <= 60),
+                    (self.df_db[col] > 20) & (self.df_db[col] <= 40),
+                    self.df_db[col] <= 20
+                ]
+
+                values = [80, 60, 40, 20, 0]     
+
+                self.df_db[col] = np.select(conditions, values)  
+            # Histogram Plot - mrs 
+            save_histograms_to_file(self.df_db[['beneficialTotal[%]', 'harmfulTotal[%]']], self.path_hist)
+                        
+        except Exception as e:
+            print(str(e))
+            rv = False
+            rvmsg = str(e)
+            print(f"Error has occurred in the {myNAME} process")    
+            sys.exit()
+            
+        return rv, rvmsg        
 ####################################
 # main
 ####################################
@@ -288,5 +347,6 @@ if __name__ == '__main__':
     vaginalpcranalysis.EvaluatePercentileRank()     
     vaginalpcranalysis.ClassifyType() 
     vaginalpcranalysis.CalculateTotalAbundance()     
+    vaginalpcranalysis.PlotDistribution()     
     
     print('Analysis Complete')
