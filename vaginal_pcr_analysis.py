@@ -283,14 +283,14 @@ class VaginalPCRAnalysis:
         rvmsg = "Success"
         
         try:  
-            self.df_eval['beneficialTotal[%]'] = (self.df_abundance['L_crispatus'] + self.df_abundance['L_gasseri'] + self.df_abundance['L_iners'] + self.df_abundance['L_jensenii'])*100
+            self.df_eval['beneficial_total[%]'] = (self.df_abundance['L_crispatus'] + self.df_abundance['L_gasseri'] + self.df_abundance['L_iners'] + self.df_abundance['L_jensenii'])*100
               
-            self.df_eval['harmfulTotal[%]'] = (self.df_abundance['G_vaginalis'] + self.df_abundance['F_vaginae'] + self.df_abundance['BVAB-1'])*100 
+            self.df_eval['harmful_total[%]'] = (self.df_abundance['G_vaginalis'] + self.df_abundance['F_vaginae'] + self.df_abundance['BVAB-1'])*100 
             
             self.df_db = self.df_db.transpose() 
-            self.df_db['beneficialTotal[%]'] = (self.df_db['L_crispatus'] + self.df_db['L_gasseri'] + self.df_db['L_iners'] + self.df_db['L_jensenii'])*100
+            self.df_db['beneficial_total[%]'] = (self.df_db['L_crispatus'] + self.df_db['L_gasseri'] + self.df_db['L_iners'] + self.df_db['L_jensenii'])*100
               
-            self.df_db['harmfulTotal[%]'] = (self.df_db['G_vaginalis'] + self.df_db['F_vaginae'] + self.df_db['BVAB-1'])*100                         
+            self.df_db['harmful_total[%]'] = (self.df_db['G_vaginalis'] + self.df_db['F_vaginae'] + self.df_db['BVAB-1'])*100                         
         except Exception as e:
             print(str(e))
             rv = False
@@ -317,7 +317,7 @@ class VaginalPCRAnalysis:
         try:                                                    
             self.dict_mean_abundance = self.df_db.mean(axis=0, numeric_only=True).to_dict()          
             
-            for col in ['beneficialTotal[%]', 'harmfulTotal[%]']:
+            for col in ['beneficial_total[%]', 'harmful_total[%]']:
                 # Define the conditions and corresponding values
                 conditions = [
                     self.df_eval[col] >= 50,
@@ -356,7 +356,7 @@ class VaginalPCRAnalysis:
         
         try: 
 
-            for col in ['beneficialTotal[%]', 'harmfulTotal[%]']:
+            for col in ['beneficial_total[%]', 'harmful_total[%]']:
                 
                 conditions = [
                     self.df_db[col] >= 80,
@@ -370,7 +370,7 @@ class VaginalPCRAnalysis:
 
                 self.df_db[col] = np.select(conditions, values)  
             # Histogram Plot - mrs 
-            save_histograms_to_file(self.df_db[['beneficialTotal[%]', 'harmfulTotal[%]']], self.path_hist)
+            save_histograms_to_file(self.df_db[['beneficial_total[%]', 'harmful_total[%]']], self.path_hist)
                         
         except Exception as e:
             print(str(e))
