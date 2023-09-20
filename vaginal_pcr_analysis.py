@@ -36,7 +36,7 @@ def save_histograms_to_file(df, filename):
     for i in range(num_rows):           
         data = df.iloc[:,i]
         axs[i].hist(data, weights=np.ones(len(data)) / len(data)*100, bins=5)
-        axs[i].set_title(df.columns.to_list()[i][:-8])
+        axs[i].set_title(df.columns.to_list()[i][:-9])
         axs[i].set_xlabel('Sum of Relative Abundance[%]')
         axs[i].set_ylabel('Percentage of samples[%]')        
         axs[i].set_xlim([0, 100])
