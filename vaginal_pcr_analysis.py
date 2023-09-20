@@ -177,9 +177,9 @@ class VaginalPCRAnalysis:
             rvmsg = str(e)
             print(f"Error has occurred in the {myNAME} process")   
     
-    def EvaluatePercentileRank(self):
+    def EvaluateProportion(self):
         """
-        Evaluate based on percentile rank value
+        Evaluate based on proportion value
 
         Returns:
         A tuple (success, message), where success is a boolean indicating whether the operation was successful,
@@ -279,9 +279,10 @@ class VaginalPCRAnalysis:
               
             self.df_eval['harmfulTotal[%]'] = (self.df_abundance['G_vaginalis'] + self.df_abundance['F_vaginae'] + self.df_abundance['BVAB-1'])*100 
             
-            # Save the output file - df_eval
-            self.df_eval.to_csv(self.path_eval_output, encoding="utf-8-sig", index_label='serial_number') 
-
+            self.df_db = self.df_db.transpose() 
+            self.df_db['beneficialTotal[%]'] = (self.df_db['L_crispatus'] + self.df_db['L_gasseri'] + self.df_db['L_iners'] + self.df_db['L_jensenii'])*100
+              
+            self.df_db['harmfulTotal[%]'] = (self.df_db['G_vaginalis'] + self.df_db['F_vaginae'] + self.df_db['BVAB-1'])*100                         
         except Exception as e:
             print(str(e))
             rv = False
@@ -291,6 +292,47 @@ class VaginalPCRAnalysis:
     
         return rv, rvmsg     
 
+    def EvaluateBeneficialHarmful(self):
+        """
+        Evaluate Beneficial & Harmful microbiome
+
+        Returns:
+        A tuple (success, message), where success is a boolean indicating whether the operation was successful,
+        and message is a string containing a success or error message.
+        """          
+        myNAME = self.__class__.__name__+"::"+sys._getframe().f_code.co_name
+        WriteLog(myNAME, "In", type='INFO', fplog=self.__fplog)
+         
+        rv = True
+        rvmsg = "Success"
+        
+        try:                                                    
+            self.dict_mean_abundance = self.df_db.mean(axis=0, numeric_only=True).to_dict()          
+            
+            for col in ['beneficialTotal[%]', 'harmfulTotal[%]']:
+                # Define the conditions and corresponding values
+                conditions = [
+                    self.df_eval[col] >= 50,
+                    (self.df_eval[col] >= self.dict_mean_abundance[col]) & (self.df_eval[col] < 50),
+                    self.df_eval[col] <= self.dict_mean_abundance[col]
+                ]
+
+                values = ['높음', '보통', '낮음']     
+
+                self.df_eval[f"{col[:-3]}_eval"] = np.select(conditions, values)  
+                         
+            # Save the output file - df_eval
+            self.df_eval.to_csv(self.path_eval_output, encoding="utf-8-sig", index_label='serial_number') 
+            
+        except Exception as e:
+            print(str(e))
+            rv = False
+            rvmsg = str(e)
+            print(f"Error has occurred in the {myNAME} process")    
+            sys.exit()
+    
+        return rv, rvmsg          
+    
     def PlotDistribution(self): 
         """
         Plot the Distribution - Relative Abundance of Harmful & Beneficial microbiome  
@@ -305,10 +347,6 @@ class VaginalPCRAnalysis:
         rvmsg = "Success"
         
         try: 
-            self.df_db = self.df_db.transpose() 
-            self.df_db['beneficialTotal[%]'] = (self.df_db['L_crispatus'] + self.df_db['L_gasseri'] + self.df_db['L_iners'] + self.df_db['L_jensenii'])*100
-              
-            self.df_db['harmfulTotal[%]'] = (self.df_db['G_vaginalis'] + self.df_db['F_vaginae'] + self.df_db['BVAB-1'])*100             
 
             for col in ['beneficialTotal[%]', 'harmfulTotal[%]']:
                 
@@ -333,7 +371,10 @@ class VaginalPCRAnalysis:
             print(f"Error has occurred in the {myNAME} process")    
             sys.exit()
             
-        return rv, rvmsg        
+        return rv, rvmsg    
+
+
+    
 ####################################
 # main
 ####################################
@@ -344,9 +385,11 @@ if __name__ == '__main__':
     vaginalpcranalysis = VaginalPCRAnalysis(path_exp)
     vaginalpcranalysis.ReadDB()      
     vaginalpcranalysis.CalculateProportion()   
-    vaginalpcranalysis.EvaluatePercentileRank()     
+    vaginalpcranalysis.EvaluateProportion()     
     vaginalpcranalysis.ClassifyType() 
     vaginalpcranalysis.CalculateTotalAbundance()     
-    vaginalpcranalysis.PlotDistribution()     
+    vaginalpcranalysis.EvaluateBeneficialHarmful() 
+    vaginalpcranalysis.PlotDistribution()    
+
     
     print('Analysis Complete')
