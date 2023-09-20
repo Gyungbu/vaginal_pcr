@@ -42,7 +42,9 @@ def save_histograms_to_file(df, filename):
         axs[i].set_xlim([0, 100])
         
     plt.tight_layout()
-    plt.savefig(filename)            
+    plt.savefig(filename)      
+    
+    
 ###################################
 # MainClass
 ###################################
@@ -238,18 +240,24 @@ class VaginalPCRAnalysis:
         
         try:  
             dict_abundance = self.df_abundance.to_dict('records')
-            dict_type = {'L_crispatus': 'CST I', 'L_gasseri': 'CST II', 'L_iners': 'CST III',  
-                         'G_vaginalis': 'CST IV', 'F_vaginae': 'CST IV', 'BVAB-1': 'CST IV', 'L_jensenii': 'CST V'}
-
+            dict_type = {'L_crispatus': '항균든든', 'L_gasseri': '항균유지', 'L_iners': '면역주의',  
+                         'G_vaginalis': '면역저하', 'F_vaginae': '면역저하', 'BVAB-1': '면역저하', 'L_jensenii': '항균특별'}
+            
+            self.df_eval['스프레이'] = 'C'
+            
             for idx in range(len(self.li_new_sample_name)):                  
                 total_abundance = sum(dict_abundance[idx].values())
                 
                 if total_abundance < 0.05:
-                    self.df_eval.loc[self.li_new_sample_name[idx], 'Type'] = 'others'
+                    self.df_eval.loc[self.li_new_sample_name[idx], 'Type'] = '기타유형'
+                    self.df_eval.loc[self.li_new_sample_name[idx], '스프레이'] = 'G'
                     
                 else:   
                     max_taxa = max(dict_abundance[idx],key=dict_abundance[idx].get)
                     self.df_eval.loc[self.li_new_sample_name[idx], 'Type'] = dict_type[max_taxa]
+                    
+                    if dict_type[max_taxa] == '면역저하':
+                        self.df_eval.loc[self.li_new_sample_name[idx], '스프레이'] = 'G'                    
                     
         except Exception as e:
             print(str(e))
@@ -372,8 +380,6 @@ class VaginalPCRAnalysis:
             sys.exit()
             
         return rv, rvmsg    
-
-
     
 ####################################
 # main
