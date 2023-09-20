@@ -243,21 +243,21 @@ class VaginalPCRAnalysis:
             dict_type = {'L_crispatus': '항균든든', 'L_gasseri': '항균유지', 'L_iners': '면역주의',  
                          'G_vaginalis': '면역저하', 'F_vaginae': '면역저하', 'BVAB-1': '면역저하', 'L_jensenii': '항균특별'}
             
-            self.df_eval['Spray'] = 'C'
+            self.df_eval['SprayType'] = 'C'
             
             for idx in range(len(self.li_new_sample_name)):                  
                 total_abundance = sum(dict_abundance[idx].values())
                 
                 if total_abundance < 0.05:
                     self.df_eval.loc[self.li_new_sample_name[idx], 'Type'] = '기타유형'
-                    self.df_eval.loc[self.li_new_sample_name[idx], 'Spray'] = 'G'
+                    self.df_eval.loc[self.li_new_sample_name[idx], 'SprayType'] = 'G'
                     
                 else:   
                     max_taxa = max(dict_abundance[idx],key=dict_abundance[idx].get)
                     self.df_eval.loc[self.li_new_sample_name[idx], 'Type'] = dict_type[max_taxa]
                     
                     if dict_type[max_taxa] == '면역저하':
-                        self.df_eval.loc[self.li_new_sample_name[idx], 'Spray'] = 'G'                    
+                        self.df_eval.loc[self.li_new_sample_name[idx], 'SprayType'] = 'G'                    
                     
         except Exception as e:
             print(str(e))
