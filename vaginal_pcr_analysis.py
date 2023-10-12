@@ -354,21 +354,7 @@ class VaginalPCRAnalysis:
         rv = True
         rvmsg = "Success"
         
-        try: 
-
-            for col in ['beneficial_total[%]', 'harmful_total[%]']:
-                
-                conditions = [
-                    self.df_db[col] >= 80,
-                    (self.df_db[col] > 60) & (self.df_db[col] < 80),
-                    (self.df_db[col] > 40) & (self.df_db[col] <= 60),
-                    (self.df_db[col] > 20) & (self.df_db[col] <= 40),
-                    self.df_db[col] <= 20
-                ]
-
-                values = [80, 60, 40, 20, 0]     
-
-                self.df_db[col] = np.select(conditions, values)  
+        try:          
             # Histogram Plot - mrs 
             save_histograms_to_file(self.df_db[['beneficial_total[%]', 'harmful_total[%]']], self.path_hist)
                         
