@@ -205,9 +205,9 @@ class VaginalPCRAnalysis:
             for col in self.df_abundance:
                 # Define the conditions and corresponding values
                 conditions = [
-                    self.df_abundance[col] >= 50,
-                    (self.df_abundance[col] >= self.dict_mean_abundance[col]) & (self.df_abundance[col] < 50),
-                    self.df_abundance[col] <= self.dict_mean_abundance[col]
+                    self.df_abundance[col] >= 0.5,
+                    (self.df_abundance[col] >= self.dict_mean_abundance[col]) & (self.df_abundance[col] < 0.5),
+                    self.df_abundance[col] < self.dict_mean_abundance[col]
                 ]
 
                 values = ['높음', '보통', '낮음']     
@@ -322,7 +322,7 @@ class VaginalPCRAnalysis:
                 conditions = [
                     self.df_eval[col] >= 50,
                     (self.df_eval[col] >= self.dict_mean_abundance[col]) & (self.df_eval[col] < 50),
-                    self.df_eval[col] <= self.dict_mean_abundance[col]
+                    self.df_eval[col] < self.dict_mean_abundance[col]
                 ]
 
                 values = ['높음', '보통', '낮음']     
