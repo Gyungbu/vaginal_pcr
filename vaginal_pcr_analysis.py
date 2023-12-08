@@ -240,17 +240,24 @@ class VaginalPCRAnalysis:
         
         try:  
             dict_abundance = self.df_abundance.to_dict('records')
-            dict_type = {'L_crispatus': '항균든든', 'L_gasseri': '항균유지', 'L_iners': '면역주의',  
-                         'G_vaginalis': '면역저하', 'F_vaginae': '면역저하', 'BVAB-1': '면역저하', 'L_jensenii': '항균특별'}
+            dict_type = {'L_crispatus': '항균든든', 'L_gasseri': '항균유지', 'L_iners': '면역주의', 'L_jensenii': '항균특별',  
+                         'G_vaginalis': '면역저하', 'F_vaginae': '면역저하', 'BVAB-1': '면역저하'}
             
             self.df_eval['SprayType'] = 'C'
             
             for idx in range(len(self.li_new_sample_name)):                  
                 total_abundance = sum(dict_abundance[idx].values())
                 
+                sum_beneficial = sum(list(dict_abundance[idx].values())[0:4])
+                sum_harmful = sum(list(dict_abundance[idx].values())[0:4])
+                
                 if total_abundance < 0.05:
                     self.df_eval.loc[self.li_new_sample_name[idx], 'Type'] = '기타유형'
                     self.df_eval.loc[self.li_new_sample_name[idx], 'SprayType'] = 'G'
+                    
+                elif sum_harmful > sum_beneficial:
+                    self.df_eval.loc[self.li_new_sample_name[idx], 'Type'] = '면역저하'
+                    self.df_eval.loc[self.li_new_sample_name[idx], 'SprayType'] = 'G'                    
                     
                 else:   
                     max_taxa = max(dict_abundance[idx],key=dict_abundance[idx].get)
