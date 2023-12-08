@@ -249,7 +249,7 @@ class VaginalPCRAnalysis:
                 total_abundance = sum(dict_abundance[idx].values())
                 
                 sum_beneficial = sum(list(dict_abundance[idx].values())[0:4])
-                sum_harmful = sum(list(dict_abundance[idx].values())[0:4])
+                sum_harmful = sum(list(dict_abundance[idx].values())[4:])
                 
                 if total_abundance < 0.05:
                     self.df_eval.loc[self.li_new_sample_name[idx], 'Type'] = '기타유형'
