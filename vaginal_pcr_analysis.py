@@ -41,8 +41,18 @@ def save_histograms_to_file(df, filename):
         axs[i].set_ylabel('Percentage of samples[%]')        
         axs[i].set_xlim([0, 100])
         
+        if i == 0:
+            beneficial_distribution = axs[i].hist(data, weights=np.ones(len(data)) / len(data)*100, bins=[0,20,40,60,80,100])[0]
+        if i == 1:
+            harmful_distribution = axs[i].hist(data, weights=np.ones(len(data)) / len(data)*100, bins=[0,20,40,60,80,100])[0]        
+    
+    str_beneficial_distribution = ','.join(str(x) for x in beneficial_distribution)
+    str_harmful_distribution = ','.join(str(x) for x in harmful_distribution)
+
     plt.tight_layout()
     plt.savefig(filename)          
+    
+    return str_beneficial_distribution, str_harmful_distribution
     
     
 ###################################
@@ -111,11 +121,11 @@ class VaginalPCRAnalysis:
             
             if "Cт" in li_column:
                 self.df_exp = self.df_exp[["Sample Name", "Target Name", "Cт"]]
-                self.df_exp.rename(columns = {"Sample Name": "sample_name", "Target Name": "microbiome", "Cт": "Ct"}, inplace=True)
+                self.df_exp.rename(columns = {"Sample Name": "sample_name", "Target Name": "microbiome", "Cт": "Ct", "Tm1": "Tm1"}, inplace=True)
                 
             elif "CT" in li_column:
-                self.df_exp = self.df_exp[["Sample Name", "Target Name", "CT"]]
-                self.df_exp.rename(columns = {"Sample Name": "sample_name", "Target Name": "microbiome", "CT": "Ct"}, inplace=True)
+                self.df_exp = self.df_exp[["Sample Name", "Target Name", "CT", 'Tm1']]
+                self.df_exp.rename(columns = {"Sample Name": "sample_name", "Target Name": "microbiome", "CT": "Ct", "Tm1": "Tm1"}, inplace=True)
             
             else:
                 print("Check the columns of Experiment result file")
@@ -164,8 +174,13 @@ class VaginalPCRAnalysis:
 
                     ct = self.df_exp[condition_microbiome]['Ct'].values[0]
                     ct_universal = self.df_exp[condition_universal]['Ct'].values[0]   
-                    
-                    self.df_abundance.loc[self.li_microbiome[j], self.li_new_sample_name[i]] = 2**(-(ct- ct_universal))
+                    Tm1 = self.df_exp[condition_microbiome]['Tm1'].values[0]
+
+                    if (ct == 40.1) | (Tm1 <= 80):                    
+                        self.df_abundance.loc[self.li_microbiome[j], self.li_new_sample_name[i]] = 0
+                        
+                    else:                    
+                        self.df_abundance.loc[self.li_microbiome[j], self.li_new_sample_name[i]] = 2**(-(ct- ct_universal))
             self.df_abundance = self.df_abundance.rename_axis('serial_number', axis=1)                        
             
             self.df_abundance = self.df_abundance.transpose()
@@ -336,8 +351,6 @@ class VaginalPCRAnalysis:
 
                 self.df_eval[f"{col[:-3]}_eval"] = np.select(conditions, values)  
                          
-            # Save the output file - df_eval
-            self.df_eval.to_csv(self.path_eval_output, encoding="utf-8-sig", index_label='serial_number') 
             
         except Exception as e:
             print(str(e))
@@ -364,7 +377,13 @@ class VaginalPCRAnalysis:
         try:          
             # Histogram Plot - mrs 
             save_histograms_to_file(self.df_db[['beneficial_total[%]', 'harmful_total[%]']], self.path_hist)
-                        
+                
+                
+            self.df_eval['beneficial_distribution'] = save_histograms_to_file(self.df_db[['beneficial_total[%]', 'harmful_total[%]']], self.path_hist)[0]
+            self.df_eval['harmful_distribution'] = save_histograms_to_file(self.df_db[['beneficial_total[%]', 'harmful_total[%]']], self.path_hist)[1]            
+            # Save the output file - df_eval
+            self.df_eval.to_csv(self.path_eval_output, encoding="utf-8-sig", index_label='serial_number')        
+            
         except Exception as e:
             print(str(e))
             rv = False

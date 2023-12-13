@@ -94,11 +94,11 @@ class VaginalPCRUpdateRef:
             
             if "Cт" in li_column:
                 self.df_exp = self.df_exp[["Sample Name", "Target Name", "Cт"]]
-                self.df_exp.rename(columns = {"Sample Name": "sample_name", "Target Name": "microbiome", "Cт": "Ct"}, inplace=True)
+                self.df_exp.rename(columns = {"Sample Name": "sample_name", "Target Name": "microbiome", "Cт": "Ct", "Tm1": "Tm1"}, inplace=True)
                 
             elif "CT" in li_column:
-                self.df_exp = self.df_exp[["Sample Name", "Target Name", "CT"]]
-                self.df_exp.rename(columns = {"Sample Name": "sample_name", "Target Name": "microbiome", "CT": "Ct"}, inplace=True)
+                self.df_exp = self.df_exp[["Sample Name", "Target Name", "CT", 'Tm1']]
+                self.df_exp.rename(columns = {"Sample Name": "sample_name", "Target Name": "microbiome", "CT": "Ct", "Tm1": "Tm1"}, inplace=True)
             
             else:
                 print("Check the columns of Experiment result file")
@@ -107,7 +107,7 @@ class VaginalPCRUpdateRef:
             idx_nan_id = self.df_exp.index.to_list().index(np.nan)
             self.df_exp = self.df_exp.iloc[:idx_nan_id, :]
             self.df_exp.loc[self.df_exp['Ct'] == 'Undetermined', 'Ct'] = 40.1
-                  
+            
         except Exception as e:
             print(str(e))
             rv = False
@@ -147,9 +147,14 @@ class VaginalPCRUpdateRef:
 
                     ct = self.df_exp[condition_microbiome]['Ct'].values[0]
                     ct_universal = self.df_exp[condition_universal]['Ct'].values[0]   
+                    Tm1 = self.df_exp[condition_microbiome]['Tm1'].values[0]
                     
-                    self.df_abundance.loc[self.li_microbiome[j], self.li_new_sample_name[i]] = 2**(-(ct- ct_universal))
-            
+                    if (ct == 40.1) | (Tm1 <= 80):     
+                        self.df_abundance.loc[self.li_microbiome[j], self.li_new_sample_name[i]] = 0
+                        
+                    else:  
+                        self.df_abundance.loc[self.li_microbiome[j], self.li_new_sample_name[i]] = 2**(-(ct- ct_universal))
+                        
         except Exception as e:
             print(str(e))
             rv = False
