@@ -211,9 +211,7 @@ class VaginalPCRAnalysis:
         try:                 
             self.df_eval = pd.DataFrame(index=self.df_abundance.index)
                         
-            self.df_mean_abundance = self.df_db.mean(axis=1, numeric_only=True)
-            # Save the output file - Abundance of the samples
-            self.df_mean_abundance.to_csv(self.path_mean_abundance, encoding="utf-8-sig", header= None)                  
+            self.df_mean_abundance = self.df_db.mean(axis=1, numeric_only=True)           
             
             self.dict_mean_abundance = self.df_db.mean(axis=1, numeric_only=True).to_dict()
             
@@ -350,7 +348,8 @@ class VaginalPCRAnalysis:
                 values = ['높음', '보통', '낮음']     
 
                 self.df_eval[f"{col[:-3]}_eval"] = np.select(conditions, values)  
-                         
+            # Save the output file - df_eval
+            self.df_eval.to_csv(self.path_eval_output, encoding="utf-8-sig", index_label='serial_number')                          
             
         except Exception as e:
             print(str(e))
@@ -378,11 +377,11 @@ class VaginalPCRAnalysis:
             # Histogram Plot - mrs 
             save_histograms_to_file(self.df_db[['beneficial_total[%]', 'harmful_total[%]']], self.path_hist)
                 
-                
-            self.df_eval['beneficial_distribution'] = save_histograms_to_file(self.df_db[['beneficial_total[%]', 'harmful_total[%]']], self.path_hist)[0]
-            self.df_eval['harmful_distribution'] = save_histograms_to_file(self.df_db[['beneficial_total[%]', 'harmful_total[%]']], self.path_hist)[1]            
-            # Save the output file - df_eval
-            self.df_eval.to_csv(self.path_eval_output, encoding="utf-8-sig", index_label='serial_number')        
+            self.df_mean_abundance.loc['beneficial_distribution'] = save_histograms_to_file(self.df_db[['beneficial_total[%]', 'harmful_total[%]']], self.path_hist)[0]
+            self.df_mean_abundance.loc['harmful_distribution'] = save_histograms_to_file(self.df_db[['beneficial_total[%]', 'harmful_total[%]']], self.path_hist)[1]
+                  
+            # Save the output file - Abundance of the samples
+            self.df_mean_abundance.to_csv(self.path_mean_abundance, encoding="utf-8-sig", header= None)       
             
         except Exception as e:
             print(str(e))
