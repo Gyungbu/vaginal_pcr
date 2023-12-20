@@ -1,5 +1,5 @@
 ##<Usage: python Script.py {path_exp}>
-### ex) python vaginal_pcr_update_reference.py "/home/kbkim/vaginal_pcr/input/experiment_result.xlsx"
+### ex) python vaginal_pcr_update_reference.py "/home/kbkim/vaginal_pcr/input/EGvaginal_experiment_result.xlsx"
 
 import os, datetime
 import pandas as pd
@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 # Check if the script is being called with the correct arguments
 if len(sys.argv) < 2:
     print("Usage: python Script.py <path_exp>")
-    print("Example: python vaginal_pcr_update_reference.py \"/home/kbkim/vaginal_pcr/input/experiment_result2.xlsx\"")
+    print("Example: python vaginal_pcr_update_reference.py \"/home/kbkim/vaginal_pcr/input/EGvaginal_experiment_result.xlsx\"")
     sys.exit(1)
     
 # path_exp : Path of Merged Proportion file to analyze
@@ -58,7 +58,7 @@ class VaginalPCRUpdateRef:
         ## Path of Reference files
         curdir = os.path.dirname(os.path.abspath(__file__))
         self.path_exp = path_exp
-        self.path_db = f"{curdir}/input/db_abundance.csv"
+        self.path_db = f"{curdir}/input/EGvaginal_db_abundance.csv"
         
         ## Path of output files     
 

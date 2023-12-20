@@ -71,7 +71,7 @@ class VaginalPCRAnalysis:
         ## Path of Reference files
         curdir = os.path.dirname(os.path.abspath(__file__))
         self.path_exp = path_exp
-        self.path_db = f"{curdir}/input/db_abundance.csv"
+        self.path_db = f"{curdir}/input/EGvaginal_db_abundance.csv"
                        
         ###output
         if( outdir is not None ):
@@ -81,10 +81,10 @@ class VaginalPCRAnalysis:
             
             
         ## Path of output files     
-        self.path_abundance_output = f"{self.outdir}/abundance.csv"
-        self.path_eval_output = f"{self.outdir}/eval.csv"
-        self.path_mean_abundance = f"{self.outdir}/mean_abundance.csv"
-        self.path_hist = f"{self.outdir}/abundance_hist.png"
+        self.path_abundance_output = f"{self.outdir}/EGvaginal_abundance.csv"
+        self.path_eval_output = f"{self.outdir}/EGvaginal_eval.csv"
+        self.path_mean_abundance = f"{self.outdir}/EGvaginal_mean_abundance.csv"
+        self.path_hist = f"{self.outdir}/EGvaginal_abundance_hist.png"
         
         ## Dataframe of Reference files
         self.df_exp = None
@@ -397,7 +397,7 @@ class VaginalPCRAnalysis:
 ####################################
 if __name__ == '__main__':
     
-    path_exp = "input/experiment_result.xlsx"
+    path_exp = "input/EGvaginal_experiment_result.xlsx"
     
     vaginalpcranalysis = VaginalPCRAnalysis(path_exp)
     vaginalpcranalysis.ReadDB()      
