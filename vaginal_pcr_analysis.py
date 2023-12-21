@@ -210,10 +210,13 @@ class VaginalPCRAnalysis:
         
         try:                 
             self.df_eval = pd.DataFrame(index=self.df_abundance.index)
-                        
-            self.df_mean_abundance = self.df_db.mean(axis=1, numeric_only=True)           
+
+            self.df_mean_abundance = self.df_db.mean(axis=1, numeric_only=True).to_frame()     
+            self.df_mean_abundance.columns =['value']
             
             self.dict_mean_abundance = self.df_db.mean(axis=1, numeric_only=True).to_dict()
+            
+            
             
             for col in self.df_abundance:
                 # Define the conditions and corresponding values
@@ -381,7 +384,7 @@ class VaginalPCRAnalysis:
             self.df_mean_abundance.loc['harmful_distribution'] = save_histograms_to_file(self.df_db[['beneficial_total[%]', 'harmful_total[%]']], self.path_hist)[1]
                   
             # Save the output file - Abundance of the samples
-            self.df_mean_abundance.to_csv(self.path_mean_abundance, encoding="utf-8-sig", header= None)       
+            self.df_mean_abundance.to_csv(self.path_mean_abundance, encoding="utf-8-sig", index_label='taxa')       
             
         except Exception as e:
             print(str(e))
