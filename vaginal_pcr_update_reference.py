@@ -93,7 +93,7 @@ class VaginalPCRUpdateRef:
             li_column = self.df_exp.columns.values.tolist()
             
             if "Cт" in li_column:
-                self.df_exp = self.df_exp[["Sample Name", "Target Name", "Cт"]]
+                self.df_exp = self.df_exp[["Sample Name", "Target Name", "Cт", 'Tm1']]
                 self.df_exp.rename(columns = {"Sample Name": "sample_name", "Target Name": "microbiome", "Cт": "Ct", "Tm1": "Tm1"}, inplace=True)
                 
             elif "CT" in li_column:
